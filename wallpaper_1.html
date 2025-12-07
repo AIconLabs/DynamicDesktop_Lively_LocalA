@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center 60104</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            /* Daily 4K Background - Cyberpunk/Techno Theme */
+            background: url('https://images.unsplash.com/photo-1518066000714-58c45f1a2c0a?q=80&w=2560&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* Dark Overlay for readability */
+        #main-body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Glassmorphism Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Scrollbar Hide */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Animate bg slightly */
+        @keyframes drift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .active-tab {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #cbd5e1;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+
+        .link-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Map Filter */
+        .map-filter {
+            filter: grayscale(100%) invert(90%) hue-rotate(180deg) contrast(120%);
+            mix-blend-mode: luminosity;
+        }
+
+        /* --- NEW: Zen Mode --- */
+        .zen-mode .card {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            filter: blur(10px);
+        }
+
+        /* Keep specific elements visible in Zen Mode */
+        .zen-mode .card.zen-safe {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: scale(1) !important;
+            filter: none !important;
+        }
+
+        /* --- NEW: Toast Notification --- */
+        #toast-notification {
+            position: fixed;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9999;
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+        }
+
+        #toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #toast-icon {
+            color: #38bdf8;
+        }
+
+        /* --- NEW: Dev-Dock Slide-Out Panel --- */
+        #dev-dock {
+            position: fixed;
+            right: -600px;
+            top: 0;
+            width: 600px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.5);
+            transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #dev-dock.open {
+            right: 0;
+        }
+
+        #dev-dock-trigger {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(59, 130, 246, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0.5rem;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            z-index: 9997;
+            transition: all 0.3s ease;
+            writing-mode: vertical-rl;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        #dev-dock-trigger:hover {
+            background: rgba(59, 130, 246, 1);
+            padding-right: 0.75rem;
+        }
+
+        /* --- NEW: System Monitor Gauges --- */
+        .gauge-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-circle {
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 8;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .gauge-fill.cpu {
+            stroke: url(#gradient-cpu);
+        }
+
+        .gauge-fill.mem {
+            stroke: url(#gradient-mem);
+        }
+
+        .gauge-fill.disk {
+            stroke: url(#gradient-disk);
+        }
+
+        .gauge-fill.gpu {
+            stroke: url(#gradient-gpu);
+        }
+
+        /* Volume Slider Styling */
+        input[type="range"].slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        input[type="range"].slider::-webkit-slider-track {
+            background: rgba(255, 255, 255, 0.2);
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        input[type="range"].slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"].slider::-webkit-slider-thumb:hover {
+            background: #60a5fa;
+            transform: scale(1.2);
+        }
+
+        input[type="range"].slider::-moz-range-track {
+            background: rgba(255, 255, 255, 0.2);
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        input[type="range"].slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"].slider::-moz-range-thumb:hover {
+            background: #60a5fa;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen selection:bg-blue-500/30 transition-colors duration-700" id="main-body">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notification">
+        <i id="toast-icon" class="fa-solid fa-circle-info"></i>
+        <span id="toast-message">System Ready</span>
+    </div>
+
+    <!-- DEV-DOCK TRIGGER -->
+    <div id="dev-dock-trigger" onclick="toggleDevDock()">
+        DEV TOOLS
+    </div>
+
+    <!-- DEV-DOCK SLIDE-OUT PANEL -->
+    <div id="dev-dock">
+        <!-- Header -->
+        <div class="p-4 bg-black/40 border-b border-white/10 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-code text-blue-400"></i>
+                <h2 class="text-sm font-bold text-slate-200 tracking-wider">DEVELOPER WORKBENCH</h2>
+            </div>
+            <button onclick="toggleDevDock()" class="text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-1 p-2 bg-black/20 border-b border-white/5">
+            <button onclick="switchDevTool('regex')" id="btn-dev-regex"
+                class="px-3 py-1.5 rounded text-xs hover:bg-white/10 transition border border-white/10 active-tab">
+                <i class="fa-solid fa-asterisk mr-1"></i>Regex101
+            </button>
+            <button onclick="switchDevTool('json')" id="btn-dev-json"
+                class="px-3 py-1.5 rounded text-xs hover:bg-white/10 transition border border-white/10">
+                <i class="fa-solid fa-brackets-curly mr-1"></i>JSONLint
+            </button>
+            <button onclick="switchDevTool('cyberchef')" id="btn-dev-cyberchef"
+                class="px-3 py-1.5 rounded text-xs hover:bg-white/10 transition border border-white/10">
+                <i class="fa-solid fa-utensils mr-1"></i>CyberChef
+            </button>
+            <button onclick="switchDevTool('carbon')" id="btn-dev-carbon"
+                class="px-3 py-1.5 rounded text-xs hover:bg-white/10 transition border border-white/10">
+                <i class="fa-solid fa-image mr-1"></i>Carbon
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 relative overflow-hidden">
+            <iframe id="dev-regex" class="w-full h-full absolute inset-0 transition-opacity duration-300"
+                src="https://regex101.com/" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+            <iframe id="dev-json"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300"
+                src="https://jsonlint.com/" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+            <iframe id="dev-cyberchef"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300"
+                src="https://gchq.github.io/CyberChef/" sandbox="allow-scripts allow-same-origin"></iframe>
+            <iframe id="dev-carbon"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300"
+                src="https://carbon.now.sh/" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        </div>
+    </div>
+
+    <!-- Background Ambience (Optional global visual, kept subtle) -->
+    <div class="fixed inset-0 z-0 pointer-events-none opacity-30">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[120px]">
+        </div>
+    </div>
+
+    <!-- MAIN GRID CONTAINER -->
+    <div class="relative z-10 w-full h-full p-4 grid grid-cols-12 grid-rows-12 gap-4">
+
+        <!-- 1. CLOCK & DATE (Top Left: 3x2) -->
+        <div class="col-span-3 row-span-2 card flex flex-col justify-center items-center p-4 relative group zen-safe">
+            <div id="clock-time"
+                class="text-6xl font-bold tracking-tighter mono bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+                00:00</div>
+            <div id="clock-date" class="text-lg text-slate-400 mt-1 font-medium">Loading Date...</div>
+            <div class="absolute bottom-2 right-4 text-xs text-slate-600 opacity-0 group-hover:opacity-100 transition">
+                60104</div>
+        </div>
+
+        <!-- 2. WEATHER WIDGET (Top Center: 6x2) -->
+        <div class="col-span-4 row-span-2 card flex flex-col justify-between p-4 relative overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">Chicago, IL</div>
+                    <div id="weather-desc" class="text-sm text-slate-300 mt-0.5">Loading...</div>
+                </div>
+                <div id="weather-icon" class="text-4xl text-blue-400">
+                    <i class="fa-solid fa-cloud"></i>
+                </div>
+            </div>
+
+            <!-- Current Temperature & Details -->
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-start gap-4">
+                    <div id="weather-temp"
+                        class="text-5xl font-bold mono bg-clip-text text-transparent bg-gradient-to-br from-blue-300 to-cyan-400">
+                        --°</div>
+                    <div class="flex flex-col gap-1 text-xs">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fa-solid fa-temperature-half w-4"></i>
+                            <span>Feels like <span id="weather-feels"
+                                    class="text-slate-200 font-semibold">--°</span></span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fa-solid fa-droplet w-4"></i>
+                            <span>Humidity <span id="weather-hum" class="text-slate-200 font-semibold">--%</span></span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <i class="fa-solid fa-wind w-4"></i>
+                            <span>Wind <span id="weather-wind" class="text-slate-200 font-semibold">-- mph</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="flex flex-col gap-1 text-xs">
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i class="fa-solid fa-sun w-4"></i>
+                        <span>UV <span id="weather-uv" class="text-slate-200 font-semibold">--</span></span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i class="fa-solid fa-eye w-4"></i>
+                        <span>Visibility <span id="weather-vis" class="text-slate-200 font-semibold">-- mi</span></span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i class="fa-solid fa-gauge w-4"></i>
+                        <span>Pressure <span id="weather-pressure" class="text-slate-200 font-semibold">--
+                                mb</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7-Day Forecast Container -->
+            <div class="grid grid-cols-7 gap-1 border-t border-white/5 pt-2" id="forecast-container">
+                <!-- Forecast items injected via JS -->
+            </div>
+        </div>
+
+        <!-- 3. SYSTEM MONITOR (Top Right: 3x2) -->
+        <div class="col-span-3 row-span-2 card p-3 flex flex-col zen-safe">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">System Monitor</span>
+                <div class="flex gap-2">
+                    <button onclick="toggleDevDock()" class="text-slate-500 hover:text-blue-400 transition"
+                        title="Dev Tools (Alt+D)">
+                        <i class="fa-solid fa-code"></i>
+                    </button>
+                    <button onclick="toggleZenMode()" class="text-slate-500 hover:text-emerald-400 transition"
+                        title="Zen Mode (Alt+Z)" id="zen-toggle">
+                        <i class="fa-solid fa-leaf"></i>
+                    </button>
+                    <button onclick="location.reload()" class="text-slate-500 hover:text-white transition"
+                        title="Reload System">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Stats Grid -->
+            <div class="grid grid-cols-4 gap-2 flex-1">
+                <!-- CPU -->
+                <div class="flex flex-col items-center justify-center bg-black/20 rounded-lg p-2 border border-white/5">
+                    <i class="fa-solid fa-microchip text-blue-400 text-xs mb-1"></i>
+                    <div id="cpu-percent" class="text-lg font-bold mono text-blue-300">--</div>
+                    <div class="text-[8px] text-slate-500 uppercase">CPU</div>
+                </div>
+
+                <!-- Memory -->
+                <div class="flex flex-col items-center justify-center bg-black/20 rounded-lg p-2 border border-white/5">
+                    <i class="fa-solid fa-memory text-purple-400 text-xs mb-1"></i>
+                    <div id="mem-percent" class="text-lg font-bold mono text-purple-300">--</div>
+                    <div class="text-[8px] text-slate-500 uppercase">RAM</div>
+                </div>
+
+                <!-- Disk -->
+                <div class="flex flex-col items-center justify-center bg-black/20 rounded-lg p-2 border border-white/5">
+                    <i class="fa-solid fa-hard-drive text-emerald-400 text-xs mb-1"></i>
+                    <div id="disk-percent" class="text-lg font-bold mono text-emerald-300">--</div>
+                    <div class="text-[8px] text-slate-500 uppercase">Disk</div>
+                </div>
+
+                <!-- GPU -->
+                <div class="flex flex-col items-center justify-center bg-black/20 rounded-lg p-2 border border-white/5">
+                    <i class="fa-solid fa-display text-orange-400 text-xs mb-1"></i>
+                    <div id="gpu-percent" class="text-lg font-bold mono text-orange-300">--</div>
+                    <div class="text-[8px] text-slate-500 uppercase">GPU</div>
+                </div>
+            </div>
+
+            <!-- Backend Status -->
+            <div id="backend-status" class="mt-2 text-center">
+                <div class="text-[9px] text-slate-600 flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>Connecting to backend...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4a. CALENDAR (Shrunk to 2 cols) -->
+        <div class="col-span-2 row-span-6 card flex flex-col p-0 overflow-hidden bg-white/5 relative group">
+            <!-- Overlay Title -->
+            <div
+                class="absolute top-0 left-0 w-full p-2 bg-gradient-to-b from-black/80 to-transparent z-10 flex justify-between items-center pointer-events-none">
+                <h2 class="text-[10px] font-bold text-slate-300 tracking-wider">SCHEDULE</h2>
+            </div>
+            <!-- Google Calendar Embed -->
+            <iframe
+                src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FChicago&bgcolor=%23ffffff&mode=AGENDA&showTitle=0&showNav=0&showDate=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=ZW4udXNhI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%230B8043"
+                style="border-width:0"
+                class="w-full h-full opacity-80 hover:opacity-100 transition invert grayscale contrast-125"
+                frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- 4b. RSS LIVE FEED PANEL (Expandable: 1-2 cols) -->
+        <div id="rss-panel"
+            class="col-span-1 row-span-6 card flex flex-col p-0 overflow-hidden transition-all duration-300">
+            <!-- Ticker Tape -->
+            <div class="w-full h-full bg-[#131722] relative overflow-hidden group">
+                <!-- RSS Feed Header -->
+                <div
+                    class="absolute top-0 left-0 w-full bg-gradient-to-b from-black/80 to-transparent p-2 z-10 flex justify-between items-center">
+                    <span class="text-[9px] font-bold text-slate-400 tracking-wider">LIVE FEED</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleRSSExpand()"
+                            class="text-[9px] text-slate-400 hover:text-blue-400 transition"
+                            title="Expand/Collapse Panel" id="rss-expand-btn">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                        <i class="fa-solid fa-rss text-[9px] text-orange-400"></i>
+                    </div>
+                </div>
+
+                <!-- Dynamic Ticker Content -->
+                <div id="rss-container"
+                    class="absolute top-0 left-0 w-full pt-8 px-2 pb-2 h-full overflow-y-auto scrollbar-hide flex flex-col gap-3">
+                    <div class="animate-pulse flex flex-col gap-2">
+                        <div class="h-2 bg-white/5 rounded w-3/4"></div>
+                        <div class="h-2 bg-white/5 rounded w-1/2"></div>
+                        <div class="h-2 bg-white/5 rounded w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5a. GEOSPATIAL PANEL (Center: 5x6) -->
+        <div class="col-span-5 row-span-6 card relative group overflow-hidden flex flex-col">
+            <!-- Tabs -->
+            <div class="absolute top-4 left-4 z-20 flex gap-1 flex-wrap">
+                <button onclick="switchGeoTab('radar')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 active-tab"
+                    id="btn-geo-radar"><i class="fa-solid fa-cloud-showers-heavy mr-1"></i>Radar</button>
+                <button onclick="switchGeoTab('wind')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-wind"><i class="fa-solid fa-wind mr-1"></i>Wind</button>
+                <button onclick="switchGeoTab('net')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-net"><i class="fa-solid fa-network-wired mr-1"></i>Net</button>
+                <button onclick="switchGeoTab('cyber')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-cyber"><i class="fa-solid fa-shield-halved mr-1"></i>Cyber</button>
+                <button onclick="switchGeoTab('flight')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-flight"><i class="fa-solid fa-plane mr-1"></i>Flight</button>
+                <button onclick="switchGeoTab('marine')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-marine"><i class="fa-solid fa-ship mr-1"></i>Marine</button>
+                <button onclick="switchGeoTab('maps')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-geo-maps"><i class="fa-solid fa-map mr-1"></i>Traffic</button>
+            </div>
+
+            <!-- Content -->
+            <iframe id="geo-radar" class="w-full h-full absolute inset-0 transition-opacity duration-500"
+                src="https://www.rainviewer.com/map.html?loc=40.7128,-74.0060,7&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=1&o=83&lm=1&layer=radar&sm=1&sn=1"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-wind"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-net"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500 invert grayscale contrast-125"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-cyber"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-flight"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-marine"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="geo-maps"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+
+        <!-- 5b. VISUALS / AMBIENCE PANEL (Right Center: 4x6) -->
+        <div class="col-span-4 row-span-6 card relative group overflow-hidden flex flex-col">
+            <!-- Tabs -->
+            <div class="absolute top-4 right-4 z-20 flex gap-1">
+                <button onclick="switchVisTab('ambience')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 active-tab"
+                    id="btn-vis-ambience"><i class="fa-solid fa-headphones mr-1"></i>Vibes</button>
+                <button onclick="switchVisTab('radio')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-vis-radio"><i class="fa-solid fa-radio mr-1"></i>Radio</button>
+                <button onclick="switchVisTab('fluid')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-vis-fluid"><i class="fa-solid fa-water mr-1"></i>Fluids</button>
+                <button onclick="switchVisTab('solar')"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10"
+                    id="btn-vis-solar"><i class="fa-solid fa-sun mr-1"></i>Solar</button>
+            </div>
+
+            <!-- Content -->
+            <!-- Ambience -->
+            <div id="vis-ambience" class="w-full h-full absolute inset-0 transition-opacity duration-500 bg-black">
+                <div class="absolute bottom-4 left-4 z-30 flex gap-2 items-center">
+                    <button onclick="cycleAmbience()"
+                        class="px-3 py-1 rounded-full bg-black/60 hover:bg-white/20 text-xs border border-white/10 backdrop-blur text-white shadow-lg"><i
+                            class="fa-solid fa-forward-step mr-1"></i> Next</button>
+                    <button onclick="toggleMute()" id="mute-btn"
+                        class="px-3 py-1 rounded-full bg-black/60 hover:bg-white/20 text-xs border border-white/10 backdrop-blur text-white shadow-lg">
+                        <i class="fa-solid fa-volume-high" id="mute-icon"></i>
+                    </button>
+                    <div
+                        class="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur shadow-lg">
+                        <i class="fa-solid fa-volume-low text-white text-xs"></i>
+                        <input type="range" min="0" max="100" value="25" id="volume-slider"
+                            class="w-24 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+                            oninput="setVolume(this.value)">
+                        <span class="text-white text-xs mono w-8 text-right" id="volume-display">25%</span>
+                    </div>
+                </div>
+                <div id="ambience-player" class="w-full h-full pointer-events-none"></div>
+            </div>
+            <!-- Interactive Visuals -->
+            <iframe id="vis-fluid"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="vis-radio"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <iframe id="vis-solar"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+        </div>
+
+        <!-- 6. VISUAL INTELLIGENCE (Bottom Left: 4x4) -->
+        <div class="col-span-4 row-span-4 card p-0 overflow-hidden relative flex flex-col group">
+            <!-- Tabs -->
+            <div class="absolute top-3 right-3 z-20 flex gap-1">
+                <button onclick="switchVisIntel('commute')" id="btn-vi-commute"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 active-tab text-white">
+                    <i class="fa-solid fa-car"></i>
+                </button>
+                <button onclick="switchVisIntel('iss')" id="btn-vi-iss"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 text-slate-400">
+                    <i class="fa-solid fa-satellite"></i>
+                </button>
+                <button onclick="switchVisIntel('net')" id="btn-vi-net"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 text-slate-400">
+                    <i class="fa-solid fa-network-wired"></i>
+                </button>
+                <button onclick="switchVisIntel('cyber')" id="btn-vi-cyber"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 text-slate-400">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </button>
+                <button onclick="switchVisIntel('sky')" id="btn-vi-sky"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 text-slate-400">
+                    <i class="fa-solid fa-earth-americas"></i>
+                </button>
+                <button onclick="switchVisIntel('flight')" id="btn-vi-flight"
+                    class="px-2 py-1 rounded bg-black/50 backdrop-blur text-[10px] hover:bg-white/20 transition border border-white/10 text-slate-400">
+                    <i class="fa-solid fa-plane-up"></i>
+                </button>
+            </div>
+
+            <!-- Header -->
+            <div class="absolute top-3 left-3 z-10 pointer-events-none">
+                <div class="text-xs font-bold text-slate-300 drop-shadow-md">VISUAL INTEL</div>
+            </div>
+
+            <!-- Content Frames -->
+            <!-- 1. Commute (Bellwood -> River North) -->
+            <iframe id="vi-commute" class="w-full h-full transition-opacity duration-500 map-filter"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d190255.337537873!2d-74.0060!3d40.7128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1625680000000!5m2!1sen!2sus"
+                style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+
+            <!-- 2. ISS Tracker -->
+            <iframe id="vi-iss"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="https://isstracker.spaceflight.esa.int/" frameborder="0"></iframe>
+
+            <!-- 3. Submarine Cables -->
+            <iframe id="vi-net"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="https://embed.waze.com/iframe?zoom=12&lat=41.8781&lon=-87.6298&ct=livemap"
+                frameborder="0"></iframe>
+
+            <!-- 4. Cyber Threat Map -->
+            <iframe id="vi-cyber"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="https://threatmap.fortiguard.com/" frameborder="0"></iframe>
+
+            <!-- 5. Zoom Earth (Sky) -->
+            <iframe id="vi-sky"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="https://companiesmarketcap.com/" frameborder="0"></iframe>
+
+            <!-- 6. ADS-B Flight -->
+            <iframe id="vi-flight"
+                class="w-full h-full absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500"
+                src="https://globe.adsbexchange.com/" frameborder="0"></iframe>
+        </div>
+
+        <!-- 7. COMMAND DECK - DYNAMIC EXPLORER (Bottom Right: 8x4) -->
+        <div class="col-span-8 row-span-4 card flex flex-col relative overflow-hidden">
+            <!-- Header -->
+            <div
+                class="p-3 bg-black/40 backdrop-blur border-b border-white/5 flex items-center justify-between sticky top-0 z-20 h-10">
+                <div class="flex gap-2 items-center">
+                    <i class="fa-regular fa-folder-open text-amber-400 text-xs"></i>
+                    <h2 class="text-xs font-bold text-slate-300 tracking-wider">COMMAND DECK</h2>
+                </div>
+                <div class="flex gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-500/50"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-yellow-500/50"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500/50"></div>
+                </div>
+            </div>
+
+            <!-- Explorer Body -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Sidebar (Categories) -->
+                <div
+                    class="w-1/4 bg-black/20 border-r border-white/5 flex flex-col py-2 gap-0.5 overflow-y-auto custom-scrollbar">
+                    <button onclick="loadFolder('essentials')" id="folder-essentials"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2 folder-active">
+                        <i class="fa-solid fa-star text-yellow-500 w-4 text-center"></i> Essentials
+                    </button>
+                    <button onclick="loadFolder('work')" id="folder-work"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-blue-300 w-4 text-center"></i> Work
+                    </button>
+                    <button onclick="loadFolder('productivity')" id="folder-productivity"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-emerald-400 w-4 text-center"></i> Productive
+                    </button>
+                    <button onclick="loadFolder('finance')" id="folder-finance"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-green-400 w-4 text-center"></i> Finance
+                    </button>
+                    <button onclick="loadFolder('tech')" id="folder-tech"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-purple-400 w-4 text-center"></i> Tech
+                    </button>
+                    <button onclick="loadFolder('news')" id="folder-news"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-newspaper text-slate-200 w-4 text-center"></i> News
+                    </button>
+                    <button onclick="loadFolder('social')" id="folder-social"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-users text-pink-500 w-4 text-center"></i> Social
+                    </button>
+                    <button onclick="loadFolder('streaming')" id="folder-streaming"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-play text-red-500 w-4 text-center"></i> Stream
+                    </button>
+                    <button onclick="loadFolder('local')" id="folder-local"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-cyan-500 w-4 text-center"></i> Local
+                    </button>
+                    <button onclick="loadFolder('auto')" id="folder-auto"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-car text-red-300 w-4 text-center"></i> Auto
+                    </button>
+                    <button onclick="loadFolder('gaming')" id="folder-gaming"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad text-orange-400 w-4 text-center"></i> Gaming
+                    </button>
+                    <button onclick="loadFolder('lifestyle')" id="folder-lifestyle"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-shirt text-pink-400 w-4 text-center"></i> Lifestyle
+                    </button>
+                    <button onclick="loadFolder('food')" id="folder-food"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-utensils text-amber-600 w-4 text-center"></i> Food
+                    </button>
+                    <button onclick="loadFolder('travel')" id="folder-travel"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-plane text-sky-400 w-4 text-center"></i> Travel
+                    </button>
+                    <button onclick="loadFolder('sports')" id="folder-sports"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-blue-500 w-4 text-center"></i> Sports
+                    </button>
+                    <button onclick="loadFolder('shopping')" id="folder-shopping"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-bag-shopping text-emerald-300 w-4 text-center"></i> Shop
+                    </button>
+                    <button onclick="loadFolder('utilities')" id="folder-utilities"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-toolbox text-slate-400 w-4 text-center"></i> Utils
+                    </button>
+                    <button onclick="loadFolder('school')" id="folder-school"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400 w-4 text-center"></i> School
+                    </button>
+                    <button onclick="loadFolder('dev')" id="folder-dev"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-code text-cyan-400 w-4 text-center"></i> Dev
+                    </button>
+                    <button onclick="loadFolder('research')" id="folder-research"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-violet-400 w-4 text-center"></i> Research
+                    </button>
+                    <button onclick="loadFolder('seattle')" id="folder-seattle"
+                        class="w-full text-left px-3 py-2 text-[10px] text-slate-400 hover:bg-white/10 hover:text-white transition flex items-center gap-2 border-t border-white/10 mt-1 pt-1">
+                        <i class="fa-solid fa-city text-teal-600 w-4 text-center"></i> Seattle
+                    </button>
+                </div>
+
+                <!-- Main View (Files/Links) -->
+                <!-- Main View (Files/Links) -->
+                <div class="w-3/4 bg-black/10 p-2 overflow-y-auto custom-scrollbar h-full" id="explorer-content">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Widget -->
+        <div class="col-span-3 row-span-2 card p-4 overflow-y-auto scrollbar-hide">
+            <h3 class="text-sm font-bold text-slate-400 mb-2">Quick Notes</h3>
+            <textarea id="quick-notes"
+                class="w-full h-full bg-transparent text-sm text-slate-200 border border-white/10 rounded p-2 focus:outline-none"
+                placeholder="Type notes..."></textarea>
+        </div>
+
+    </div>
+
+    <script>
+
+        // --- UTILS: TOAST ---
+        let toastTimeout;
+        function showToast(msg, icon = 'fa-circle-info') {
+            const el = document.getElementById('toast-notification');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            if (!el) return;
+
+            msgEl.innerText = msg;
+            iconEl.className = `fa-solid ${icon}`;
+            el.classList.add('show');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                el.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- UTILS: ZEN MODE ---
+        function toggleZenMode() {
+            const body = document.getElementById('main-body');
+            body.classList.toggle('zen-mode');
+            const active = body.classList.contains('zen-mode');
+            showToast(active ? "Zen Mode: ON" : "Zen Mode: OFF", 'fa-leaf');
+        }
+
+        // --- UTILS: HOTKEYS ---
+        document.addEventListener('keydown', (e) => {
+            // ALT + Key combos
+            if (e.altKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'z':
+                        e.preventDefault();
+                        toggleZenMode();
+                        break;
+                    case 'r': // Radar
+                        switchGeoTab('radar');
+                        showToast('Radar Active', 'fa-cloud-showers-heavy');
+                        break;
+                    case 'w': // Wind
+                        switchGeoTab('wind');
+                        showToast('Wind Map Active', 'fa-wind');
+                        break;
+                    case 'm': // Marine
+                        switchGeoTab('marine');
+                        showToast('Marine Traffic', 'fa-ship');
+                        break;
+                    case 't': // Traffic
+                        switchGeoTab('maps');
+                        showToast('Traffic Map', 'fa-map');
+                        break;
+                    case '1': // Essentials
+                        loadFolder('essentials');
+                        showToast('Folder: Essentials', 'fa-star');
+                        break;
+                    case '2': // Finance
+                        loadFolder('finance');
+                        showToast('Folder: Finance', 'fa-chart-line');
+                        break;
+                    case '3': // School
+                        loadFolder('school');
+                        showToast('Folder: School', 'fa-graduation-cap');
+                        break;
+                    case '4': // Tech
+                        loadFolder('tech');
+                        showToast('Folder: Tech', 'fa-microchip');
+                        break;
+                    case 'q':
+                        e.preventDefault();
+                        openNotepad();
+                        showToast('Quick Notes', 'fa-note-sticky');
+                        break;
+                }
+            }
+        });
+
+        // --- FEATURE: RSS TICKER (MULTI-FEED) ---
+        let rssExpanded = false;
+
+        // Toggle RSS Panel Width
+        function toggleRSSExpand() {
+            const panel = document.getElementById('rss-panel');
+            const btn = document.getElementById('rss-expand-btn');
+            const calendar = panel.previousElementSibling; // Calendar panel
+
+            rssExpanded = !rssExpanded;
+
+            if (rssExpanded) {
+                // Expand RSS to 2 columns, shrink calendar to 1 column
+                panel.classList.remove('col-span-1');
+                panel.classList.add('col-span-2');
+                calendar.classList.remove('col-span-2');
+                calendar.classList.add('col-span-1');
+                btn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+                showToast('Feed Expanded', 'fa-expand');
+            } else {
+                // Collapse RSS to 1 column, restore calendar to 2 columns
+                panel.classList.remove('col-span-2');
+                panel.classList.add('col-span-1');
+                calendar.classList.remove('col-span-1');
+                calendar.classList.add('col-span-2');
+                btn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+                showToast('Feed Collapsed', 'fa-compress');
+            }
+        }
+
+        // Multiple RSS Feeds Configuration
+        const rssFeeds = [
+            { url: 'https://www.theverge.com/rss/index.xml', category: 'Tech', color: 'purple' },
+            { url: 'https://techcrunch.com/feed/', category: 'Tech', color: 'green' },
+            { url: 'https://www.wired.com/feed/rss', category: 'Tech', color: 'red' },
+            { url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'Tech', color: 'orange' },
+            { url: 'https://www.engadget.com/rss.xml', category: 'Tech', color: 'blue' },
+            { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', category: 'News', color: 'slate' },
+            { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', category: 'News', color: 'red' },
+            { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', category: 'Finance', color: 'emerald' },
+            { url: 'https://www.reddit.com/r/technology/.rss', category: 'Community', color: 'orange' },
+            { url: 'https://news.ycombinator.com/rss', category: 'Tech', color: 'amber' }
+        ];
+
+        async function fetchFeed(feedConfig) {
+            const feedUrl = encodeURIComponent(feedConfig.url);
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`;
+
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    return data.items.slice(0, 3).map(item => ({
+                        ...item,
+                        category: feedConfig.category,
+                        color: feedConfig.color
+                    }));
+                }
+            } catch (err) {
+                console.error(`RSS Load Error for ${feedConfig.url}:`, err);
+            }
+            return [];
+        }
+
+        async function updateRSS() {
+            const container = document.getElementById('rss-container');
+            if (!container) return;
+
+            try {
+                // Fetch from multiple feeds in parallel
+                const feedPromises = rssFeeds.map(feed => fetchFeed(feed));
+                const results = await Promise.all(feedPromises);
+
+                // Flatten and combine all items
+                const allItems = results.flat();
+
+                // Sort by publication date (newest first)
+                allItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+                if (allItems.length > 0) {
+                    container.innerHTML = ''; // Clear skeleton
+
+                    // Display top 30 items
+                    allItems.slice(0, 30).forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'flex flex-col gap-0.5 border-b border-white/5 pb-2 last:border-0';
+
+                        // Clean title
+                        const title = item.title.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+
+                        // Category badge color
+                        const badgeColors = {
+                            'purple': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                            'green': 'bg-green-500/20 text-green-300 border-green-500/30',
+                            'red': 'bg-red-500/20 text-red-300 border-red-500/30',
+                            'orange': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+                            'blue': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+                            'slate': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+                            'emerald': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                            'amber': 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        };
+
+                        const badgeClass = badgeColors[item.color] || badgeColors['slate'];
+
+                        div.innerHTML = `
+                            <div class="flex items-center gap-1 mb-1">
+                                <span class="text-[7px] px-1.5 py-0.5 rounded border ${badgeClass} font-bold uppercase tracking-wide">${item.category}</span>
+                                <span class="text-[7px] text-slate-500">${new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <a href="${item.link}" target="_blank" class="text-[10px] font-bold text-slate-300 hover:text-blue-400 transition leading-tight line-clamp-2">${title}</a>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = `<div class="text-[10px] text-yellow-400 p-2 text-center">No feeds available</div>`;
+                }
+            } catch (err) {
+                console.error("RSS Update Error", err);
+                container.innerHTML = `<div class="text-[10px] text-red-400 p-2 text-center">Feed Offline</div>`;
+            }
+        }
+
+        // Update RSS every 10 mins
+        updateRSS();
+        setInterval(updateRSS, 600000);
+
+        // 1. CLOCK FUNCTION
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            document.getElementById('clock-time').innerText = timeStr;
+            document.getElementById('clock-date').innerText = dateStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. WEATHER FETCH (Open-Meteo API with extended data)
+        async function fetchWeather() {
+            try {
+                const url = "https://api.open-meteo.com/v1/forecast?latitude=41.8781&longitude=-87.6298&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,surface_pressure,visibility,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto";
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const current = data.current;
+                const temp = Math.round(current.temperature_2m);
+                const feelsLike = Math.round(current.apparent_temperature);
+                const code = current.weather_code;
+                const wind = Math.round(current.wind_speed_10m);
+                const hum = current.relative_humidity_2m;
+                const pressure = Math.round(current.surface_pressure);
+                const visibility = current.visibility ? (current.visibility / 1609.34).toFixed(1) : '--'; // Convert meters to miles
+                const uvIndex = current.uv_index ? current.uv_index.toFixed(1) : '--';
+
+                const weatherMap = {
+                    0: { icon: 'fa-sun', desc: 'Clear Sky' },
+                    1: { icon: 'fa-cloud-sun', desc: 'Mainly Clear' },
+                    2: { icon: 'fa-cloud-sun', desc: 'Partly Cloudy' },
+                    3: { icon: 'fa-cloud', desc: 'Overcast' },
+                    45: { icon: 'fa-smog', desc: 'Foggy' }, 48: { icon: 'fa-smog', desc: 'Rime Fog' },
+                    51: { icon: 'fa-cloud-rain', desc: 'Light Drizzle' }, 53: { icon: 'fa-cloud-rain', desc: 'Drizzle' }, 55: { icon: 'fa-cloud-rain', desc: 'Heavy Drizzle' },
+                    61: { icon: 'fa-cloud-showers-heavy', desc: 'Light Rain' }, 63: { icon: 'fa-cloud-showers-heavy', desc: 'Rain' }, 65: { icon: 'fa-cloud-showers-heavy', desc: 'Heavy Rain' },
+                    71: { icon: 'fa-snowflake', desc: 'Light Snow' }, 73: { icon: 'fa-snowflake', desc: 'Snow' }, 75: { icon: 'fa-snowflake', desc: 'Heavy Snow' },
+                    95: { icon: 'fa-bolt', desc: 'Thunderstorm' }, 96: { icon: 'fa-bolt', desc: 'Thunderstorm with Hail' }, 99: { icon: 'fa-bolt', desc: 'Heavy Thunderstorm' }
+                };
+
+                const w = weatherMap[code] || { icon: 'fa-cloud', desc: 'Cloudy' };
+
+                // Update main weather display
+                document.getElementById('weather-temp').innerText = `${temp}°`;
+                document.getElementById('weather-desc').innerText = w.desc;
+                document.getElementById('weather-wind').innerText = `${wind} mph`;
+                document.getElementById('weather-hum').innerText = `${hum}%`;
+                document.getElementById('weather-feels').innerText = `${feelsLike}°`;
+                document.getElementById('weather-uv').innerText = uvIndex;
+                document.getElementById('weather-vis').innerText = `${visibility} mi`;
+                document.getElementById('weather-pressure').innerText = `${pressure} mb`;
+
+                // Update weather icon
+                const iconEl = document.getElementById('weather-icon');
+                iconEl.innerHTML = `<i class="fa-solid ${w.icon}"></i>`;
+
+                // 7-Day Forecast
+                const daily = data.daily;
+                const forecastContainer = document.getElementById('forecast-container');
+                if (forecastContainer && daily) {
+                    forecastContainer.innerHTML = '';
+                    for (let i = 0; i < 7; i++) {
+                        const maxTemp = Math.round(daily.temperature_2m_max[i]);
+                        const minTemp = Math.round(daily.temperature_2m_min[i]);
+                        const dCode = daily.weather_code[i];
+                        const dW = weatherMap[dCode] || { icon: 'fa-cloud' };
+                        const d = new Date(); d.setDate(d.getDate() + i);
+                        const dayName = i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' });
+                        const div = document.createElement('div');
+                        div.className = 'text-center flex flex-col items-center justify-center gap-1 p-1 rounded hover:bg-white/10 transition cursor-pointer';
+                        div.innerHTML = `<div class="text-[9px] text-slate-400 uppercase tracking-wide font-semibold">${dayName}</div><i class="fa-solid ${dW.icon} text-sm text-blue-300"></i><div class="text-[11px] font-bold text-slate-200">${maxTemp}°</div><div class="text-[9px] text-slate-500">${minTemp}°</div>`;
+                        forecastContainer.appendChild(div);
+                    }
+                }
+            } catch (e) {
+                console.error("Weather fetch failed", e);
+                // Show error state
+                document.getElementById('weather-desc').innerText = 'Unable to load';
+            }
+        }
+        fetchWeather(); setInterval(fetchWeather, 600000);
+
+        // 7. DYNAMIC BOOKMARK EXPLORER LOGIC
+        const bookmarksData = {
+            'essentials': [
+                { name: 'Gmail', icon: 'fa-envelope', url: 'https://mail.google.com/mail/u/0/#inbox' },
+                { name: 'Calendar', icon: 'fa-calendar', url: 'https://calendar.google.com/calendar/render' },
+                { name: 'Keep', icon: 'fa-note-sticky', url: 'https://keep.google.com/' },
+                { name: 'Photos', icon: 'fa-image', url: 'https://photos.google.com/' },
+                { name: 'Drive', icon: 'fa-hard-drive', url: 'https://drive.google.com/drive/my-drive' },
+                { name: 'Voice', icon: 'fa-phone', url: 'https://voice.google.com/u/0/calls' },
+                { name: 'Chase', icon: 'fa-building-columns', url: 'https://chase.com' },
+                { name: 'Fidelity', icon: 'fa-chart-pie', url: 'https://www.fidelity.com/' },
+                { name: 'Amazon', icon: 'fa-brands fa-amazon', url: 'https://www.amazon.com/' }
+            ],
+            'work': [
+                { name: 'GitHub', icon: 'fa-brands fa-github', url: 'https://github.com/' },
+                { name: 'StackOverflow', icon: 'fa-layer-group', url: 'https://stackoverflow.com/' },
+                { name: 'LinkedIn', icon: 'fa-brands fa-linkedin', url: 'https://www.linkedin.com/' }
+            ],
+            'productivity': [
+                { name: 'ChatGPT', icon: 'fa-robot', url: 'https://chat.openai.com/' },
+                { name: 'Claude', icon: 'fa-brain', url: 'https://claude.ai/' },
+                { name: 'Notion', icon: 'fa-book', url: 'https://www.notion.so/' },
+                { name: 'Trello', icon: 'fa-trello', url: 'https://trello.com/' },
+                { name: 'Asana', icon: 'fa-list-check', url: 'https://asana.com/' },
+                { name: 'Google Docs', icon: 'fa-file-lines', url: 'https://docs.google.com/' },
+                { name: 'Canva', icon: 'fa-palette', url: 'https://www.canva.com/' }
+            ],
+            'finance': [
+                { name: 'Yahoo Finance', icon: 'fa-chart-line', url: 'https://finance.yahoo.com/' },
+                { name: 'TradingView', icon: 'fa-arrow-trend-up', url: 'https://www.tradingview.com/' },
+                { name: 'MarketWatch', icon: 'fa-clock', url: 'https://www.marketwatch.com/' },
+                { name: 'Finviz', icon: 'fa-table', url: 'https://finviz.com/' },
+                { name: 'CNBC', icon: 'fa-tv', url: 'https://www.cnbc.com/' },
+                { name: 'Bloomberg', icon: 'fa-newspaper', url: 'https://www.bloomberg.com/' },
+                { name: 'Mad Fientist', icon: 'fa-flask', url: 'http://www.madfientist.com/' },
+                { name: 'Seeking Alpha', icon: 'fa-magnifying-glass-chart', url: 'http://seekingalpha.com/market-news' },
+                { name: 'Slickdeals', icon: 'fa-tag', url: 'http://slickdeals.net/' },
+                { name: 'Mint', icon: 'fa-leaf', url: 'https://www.mint.com/' },
+                { name: 'eTrade', icon: 'fa-chart-column', url: 'http://etrade.com/' },
+                { name: 'Credit Karma', icon: 'fa-thumbs-up', url: 'https://www.creditkarma.com/auth/logon/' }
+            ],
+            'tech': [
+                { name: 'The Verge', icon: 'fa-microchip', url: 'https://www.theverge.com/' },
+                { name: 'Ars Technica', icon: 'fa-robot', url: 'https://arstechnica.com/' },
+                { name: 'Hacker News', icon: 'fa-y-combinator', url: 'https://news.ycombinator.com/' },
+                { name: 'Tom\'s Hardware', icon: 'fa-server', url: 'http://www.tomshardware.com/' },
+                { name: 'Engadget', icon: 'fa-plug', url: 'http://www.engadget.com/' },
+                { name: 'TechCrunch', icon: 'fa-newspaper', url: 'https://techcrunch.com/' },
+                { name: 'AnandTech', icon: 'fa-microchip', url: 'http://www.anandtech.com/' },
+                { name: 'Pocket-lint', icon: 'fa-mobile-screen', url: 'http://www.pocket-lint.com/' },
+                { name: 'Lifehacker', icon: 'fa-life-ring', url: 'http://lifehacker.com/' },
+                { name: 'Gawker', icon: 'fa-eye', url: 'http://gawker.com/' },
+                { name: 'Wired', icon: 'fa-bolt', url: 'https://www.wired.com/' }
+            ],
+            'research': [
+                { name: 'ADS-B Exchange', icon: 'fa-plane', url: 'https://globe.adsbexchange.com/' },
+                { name: 'Fortinet Threat', icon: 'fa-shield-halved', url: 'https://threatmap.fortiguard.com/' },
+                { name: 'ISS Tracker', icon: 'fa-satellite', url: 'https://isstracker.spaceflight.esa.int/' },
+                { name: 'Submarine Cables', icon: 'fa-network-wired', url: 'https://www.submarinecablemap.com/' },
+                { name: 'Zoom Earth', icon: 'fa-earth-americas', url: 'https://zoom.earth/' },
+                { name: 'Webamp', icon: 'fa-music', url: 'https://webamp.org/' },
+                { name: 'Windows 93', icon: 'fa-desktop', url: 'http://www.windows93.net/' },
+                { name: 'PCjs Machines', icon: 'fa-floppy-disk', url: 'https://www.pcjs.org/machines/pcx86/ibm/5150/mda/' },
+                { name: 'Stellarium', icon: 'fa-star', url: 'https://stellarium-web.org/' },
+                { name: 'Ptable', icon: 'fa-flask', url: 'https://ptable.com/?wide=1' },
+                { name: 'Time.is', icon: 'fa-clock', url: 'https://time.is/' }
+            ],
+            'news': [
+                { name: 'Google News', icon: 'fa-newspaper', url: 'http://news.google.com/nwshp?hl=en&tab=wn' },
+                { name: 'Reddit', icon: 'fa-reddit', url: 'https://www.reddit.com/' },
+                { name: 'PSFK', icon: 'fa-lightbulb', url: 'http://www.psfk.com/' },
+                { name: 'Yahoo', icon: 'fa-y', url: 'https://www.yahoo.com/' },
+                { name: 'Vice', icon: 'fa-v', url: 'http://www.vice.com/en_us' },
+                { name: 'Culture Mag', icon: 'fa-cannabis', url: 'http://ireadculture.com/' }
+            ],
+            'social': [
+                { name: 'Instagram', icon: 'fa-brands fa-instagram', url: 'https://www.instagram.com/' },
+                { name: 'Twitter/X', icon: 'fa-brands fa-x-twitter', url: 'https://twitter.com/' },
+                { name: 'LinkedIn', icon: 'fa-brands fa-linkedin', url: 'https://www.linkedin.com/' },
+                { name: 'Facebook', icon: 'fa-brands fa-facebook', url: 'https://www.facebook.com/' },
+                { name: 'Pinterest', icon: 'fa-brands fa-pinterest', url: 'https://www.pinterest.com/' },
+                { name: 'TikTok', icon: 'fa-brands fa-tiktok', url: 'https://www.tiktok.com/' }
+            ],
+            'streaming': [
+                { name: 'Netflix', icon: 'fa-n', url: 'https://www.netflix.com/' },
+                { name: 'Hulu', icon: 'fa-h', url: 'https://www.hulu.com/' },
+                { name: 'Disney+', icon: 'fa-d', url: 'https://www.disneyplus.com/' },
+                { name: 'Prime Video', icon: 'fa-amazon', url: 'https://www.amazon.com/Prime-Video/' },
+                { name: 'HBO Max', icon: 'fa-film', url: 'https://www.max.com/' },
+                { name: 'YouTube', icon: 'fa-youtube', url: 'https://www.youtube.com/' },
+                { name: 'Spotify', icon: 'fa-spotify', url: 'https://open.spotify.com/' },
+                { name: 'Plex', icon: 'fa-server', url: 'https://app.plex.tv/' }
+            ],
+            'local': [ // Localized for Chicago
+                { name: 'Chicago Tribune', icon: 'fa-newspaper', url: 'https://www.chicagotribune.com/' },
+                { name: 'WGN TV', icon: 'fa-tv', url: 'https://wgntv.com/' },
+                { name: 'NBC Chicago', icon: 'fa-tower-broadcast', url: 'https://www.nbcchicago.com/' },
+                { name: 'Chicago Sun-Times', icon: 'fa-newspaper', url: 'https://chicago.suntimes.com/' },
+                { name: 'ABC 7 Chicago', icon: 'fa-7', url: 'https://abc7chicago.com/' },
+                { name: 'Metra', icon: 'fa-train', url: 'https://metra.com/' },
+                { name: 'CTA', icon: 'fa-bus', url: 'https://www.transitchicago.com/' }
+            ],
+            'auto': [
+                { name: 'AllRPM', icon: 'fa-gauge-high', url: 'https://allrpm.com/' },
+                { name: 'AudiWorld', icon: 'fa-car', url: 'http://www.audiworld.com/' },
+                { name: 'Audizine', icon: 'fa-car-side', url: 'http://www.audizine.com/' },
+                { name: 'Fourtitude', icon: 'fa-4', url: 'http://fourtitude.com/' },
+                { name: 'Silodrome', icon: 'fa-motorcycle', url: 'http://silodrome.com/' },
+                { name: 'The Drive', icon: 'fa-road', url: 'http://www.thedrive.com/' }
+            ],
+            'gaming': [
+                { name: 'Twitch', icon: 'fa-brands fa-twitch', url: 'https://www.twitch.tv/' },
+                { name: 'IGN', icon: 'fa-gamepad', url: 'http://www.ign.com/' },
+                { name: 'Gamespot', icon: 'fa-bullseye', url: 'http://www.gamespot.com/' },
+                { name: 'Polygon', icon: 'fa-shapes', url: 'http://www.polygon.com/' },
+                { name: 'CrazyGames', icon: 'fa-ghost', url: 'https://www.crazygames.com/' },
+                { name: 'Rock, Paper, Shotgun', icon: 'fa-gun', url: 'http://www.rockpapershotgun.com//' },
+                { name: 'GameFly', icon: 'fa-fly', url: 'http://www.gamefly.com/' }
+            ],
+            'lifestyle': [
+                { name: 'Hypebeast', icon: 'fa-shirt', url: 'http://hypebeast.com/' },
+                { name: 'Highsnobiety', icon: 'fa-glasses', url: 'http://www.highsnobiety.com/' },
+                { name: 'Kixify', icon: 'fa-shoe-prints', url: 'http://www.kixify.com/' },
+                { name: 'Sole Collector', icon: 'fa-box', url: 'http://solecollector.com/' },
+                { name: 'Rolling Stone', icon: 'fa-music', url: 'http://www.rollingstone.com/' },
+                { name: 'Complex', icon: 'fa-x', url: 'http://www.complex.com/' },
+                { name: 'Pitchfork', icon: 'fa-record-vinyl', url: 'https://pitchfork.com/' },
+                { name: 'GQ', icon: 'fa-user-tie', url: 'https://www.gq.com/' },
+                { name: '20Six Fresh', icon: 'fa-shirt', url: 'http://20sixfresh.com/' }
+            ],
+            'food': [
+                { name: 'Eat24', icon: 'fa-utensils', url: 'http://eat24.com/' },
+                { name: 'AllRecipes', icon: 'fa-carrot', url: 'https://www.allrecipes.com/' },
+                { name: 'Skinnytaste', icon: 'fa-leaf', url: 'http://www.skinnytaste.com/' },
+                { name: 'Recipe Critic', icon: 'fa-book-open', url: 'https://therecipecritic.com/' },
+                { name: 'Thrillist', icon: 'fa-martini-glass', url: 'https://www.thrillist.com/' },
+                { name: 'Test Kitchen', icon: 'fa-flask', url: 'https://www.americastestkitchen.com/' }
+            ],
+            'travel': [
+                { name: 'Google Flights', icon: 'fa-plane-departure', url: 'https://www.google.com/travel/flights' },
+                { name: 'Airbnb', icon: 'fa-house-user', url: 'https://www.airbnb.com/' },
+                { name: 'Expedia', icon: 'fa-earth-americas', url: 'https://www.expedia.com/' },
+                { name: 'TripAdvisor', icon: 'fa-mask', url: 'https://www.tripadvisor.com/' },
+                { name: 'Booking.com', icon: 'fa-hotel', url: 'https://www.booking.com/' },
+                { name: 'Kayak', icon: 'fa-kayak', url: 'https://www.kayak.com/' }
+            ],
+            'sports': [
+                { name: 'ESPN', icon: 'fa-brands fa-kickstarter', url: 'http://espn.go.com/' },
+                { name: 'Bleacher Report', icon: 'fa-bolt', url: 'http://bleacherreport.com/nfl' },
+                { name: 'SBNation', icon: 'fa-flag', url: 'http://www.sbnation.com/nfl' },
+                { name: 'MMQB', icon: 'fa-football', url: 'http://mmqb.si.com/' },
+                { name: 'Rotoworld', icon: 'fa-rotate', url: 'http://www.rotoworld.com/' },
+                { name: 'Deadspin', icon: 'fa-skull', url: 'https://deadspin.com/' },
+                { name: 'Grantland', icon: 'fa-pen-nib', url: 'http://grantland.com/' }
+            ],
+            'shopping': [
+                { name: 'Amazon', icon: 'fa-brands fa-amazon', url: 'https://www.amazon.com/' },
+                { name: 'DealNews', icon: 'fa-newspaper', url: 'http://www.dealnews.com/' },
+                { name: 'Slickdeals', icon: 'fa-tag', url: 'http://slickdeals.net/' },
+                { name: 'FatWallet', icon: 'fa-wallet', url: 'http://www.fatwallet.com/tv-deals/' },
+                { name: 'GottaDeal', icon: 'fa-handshake', url: 'http://www.gottadeal.com/' },
+                { name: 'Newegg', icon: 'fa-egg', url: 'http://www.newegg.com/' },
+                { name: 'Overstock', icon: 'fa-boxes-packing', url: 'http://www.overstock.com/' },
+                { name: 'eBay', icon: 'fa-brands fa-ebay', url: 'http://www.ebay.com/' },
+                { name: 'Tanga', icon: 'fa-gift', url: 'https://www.tanga.com/' },
+                { name: 'Bens Bargains', icon: 'fa-money-bill', url: 'http://bensbargains.net/' }
+            ],
+            'utilities': [
+                { name: 'Speedtest', icon: 'fa-gauge', url: 'https://www.speedtest.net/' },
+                { name: 'Translate', icon: 'fa-language', url: 'https://translate.google.com/' },
+                { name: 'Google Maps', icon: 'fa-map-location-dot', url: 'https://maps.google.com/' },
+                { name: 'Weather', icon: 'fa-cloud-sun', url: 'https://weather.com/' },
+                { name: 'Calculator', icon: 'fa-calculator', url: 'https://www.desmos.com/scientific' },
+                { name: 'Photos', icon: 'fa-image', url: 'https://photos.google.com/' }
+            ],
+            'dev': [
+                { name: 'Regex 101', icon: 'fa-code', url: 'https://regex101.com/' },
+                { name: 'JSON Lint', icon: 'fa-brackets-curly', url: 'https://jsonlint.com/' },
+                { name: 'GitHub', icon: 'fa-brands fa-github', url: 'https://github.com/' },
+                { name: 'Stack Overflow', icon: 'fa-layer-group', url: 'https://stackoverflow.com/' },
+                { name: 'CyberChef', icon: 'fa-utensils', url: 'https://gchq.github.io/CyberChef/' },
+                { name: 'MDN Web Docs', icon: 'fa-book', url: 'https://developer.mozilla.org/' }
+            ],
+            'school': [
+                { name: 'PowerSchool', icon: 'fa-graduation-cap', url: 'https://powerschool.com' },
+                { name: 'ClassDojo', icon: 'fa-users', url: 'https://classdojo.com' },
+                { name: 'Khan Academy', icon: 'fa-graduation-cap', url: 'https://www.khanacademy.org/' },
+                { name: 'Coursera', icon: 'fa-laptop-code', url: 'https://www.coursera.org/' }
+            ],
+            'seattle': [
+                { name: 'Seattle Times', icon: 'fa-newspaper', url: 'https://www.seattletimes.com/' },
+                { name: 'King 5', icon: 'fa-tv', url: 'https://www.king5.com/' },
+                { name: 'KOMO News', icon: 'fa-video', url: 'https://komonews.com/' },
+                { name: 'MyNorthwest', icon: 'fa-radio', url: 'https://mynorthwest.com/' },
+                { name: 'Crosscut', icon: 'fa-tree', url: 'https://crosscut.com/' },
+                { name: 'KUOW', icon: 'fa-microphone-lines', url: 'https://www.kuow.org/' },
+                { name: 'Seattle PI', icon: 'fa-city', url: 'https://www.seattlepi.com/' },
+                { name: 'HeraldNet', icon: 'fa-newspaper', url: 'https://www.heraldnet.com/' },
+                { name: 'Craigslist', icon: 'fa-list', url: 'http://seattle.craigslist.org/' },
+                { name: 'Groupon', icon: 'fa-tag', url: 'https://www.groupon.com/browse/seattle' },
+                { name: 'Redfin', icon: 'fa-house', url: 'https://www.redfin.com/' }
+            ]
+        };
+
+        function loadFolder(category) {
+            // Update Sidebar Active State
+            document.querySelectorAll('[id^="folder-"]').forEach(el => {
+                if (el.id === `folder-${category}`) el.classList.add('bg-white/10', 'text-white');
+                else el.classList.remove('bg-white/10', 'text-white');
+            });
+
+            // Populate Content
+            const content = document.getElementById('explorer-content');
+            if (!content) return;
+
+            const items = bookmarksData[category] || [];
+            content.innerHTML = `<div class="grid grid-cols-8 gap-1">
+                ${items.map(item => `
+                    <a href="${item.url}" target="_blank" class="flex flex-col items-center justify-center p-1 rounded hover:bg-white/10 transition gap-1 group text-center h-16 border border-transparent hover:border-white/5">
+                        <i class="${item.icon || 'fa-solid fa-link'} text-lg text-slate-400 group-hover:text-cyan-400 group-hover:scale-110 transition drop-shadow-lg"></i>
+                        <span class="text-[9px] text-slate-300 break-all leading-tight opacity-70 group-hover:opacity-100">${item.name}</span>
+                    </a>
+                `).join('')}
+            </div>`;
+        }
+
+        function openNotepad() {
+            const w = window.open("", "QuickNotes", "width=400,height=400");
+            w.document.write('<html><body style="background:#111;color:#eee;font-family:monospace;padding:20px;"><textarea style="width:100%;height:100%;background:transparent;border:none;color:#eee;outline:none;font-size:14px;" placeholder="Type notes here..."></textarea></body></html>');
+        }
+
+        // Init Default Folder
+        loadFolder('essentials');
+
+        // 4. PANELS LOGIC (Split Geospatial / Visuals)
+        function switchGeoTab(tab) {
+            ['radar', 'wind', 'net', 'cyber', 'flight', 'marine', 'maps'].forEach(t => {
+                const btn = document.getElementById(`btn-geo-${t}`);
+                const frame = document.getElementById(`geo-${t}`);
+                if (btn && frame) {
+                    if (t === tab) {
+                        btn.classList.add('active-tab', 'bg-white/20', 'text-white');
+                        btn.classList.remove('bg-black/50');
+                        frame.classList.remove('opacity-0', 'pointer-events-none');
+
+                        // Load SRC if empty to save bandwidth
+                        if (frame.src === 'about:blank') {
+                            if (t === 'wind') frame.src = "https://embed.windy.com/embed2.html?lat=40.712&lon=-74.006&detailLat=40.712&detailLon=-74.006&width=650&height=450&zoom=5&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1";
+                            if (t === 'net') frame.src = "https://text.npr.org/";
+                            if (t === 'cyber') frame.src = "https://threatmap.fortiguard.com/";
+                            if (t === 'flight') frame.src = "https://www.flightradar24.com/simple_index.php?lat=40.71&lon=-74.00&z=8";
+                            if (t === 'marine') frame.src = "https://www.marinetraffic.com/en/ais/embed/zoom:9/centery:40.71/centerx:-74.00/maptype:1/shownames:false/mmsi:0/shipid:0/fleet:/fleet_id:/vtypes:/showmenu:false/remember:false";
+                            if (t === 'maps') frame.src = "https://www.openstreetmap.org/export/embed.html?bbox=-74.25%2C40.50%2C-73.75%2C40.90&layer=transportmap";
+                        }
+                    } else {
+                        btn.classList.remove('active-tab', 'bg-white/20', 'text-white');
+                        btn.classList.add('bg-black/50');
+                        frame.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                }
+            });
+        }
+
+        function switchVisTab(tab) {
+            ['ambience', 'fluid', 'solar', 'radio'].forEach(t => {
+                const btn = document.getElementById(`btn-vis-${t}`);
+                const frame = document.getElementById(`vis-${t}`);
+                const player = document.getElementById('vis-ambience'); // Special case for div
+
+                // Toggle Buttons
+                if (btn) {
+                    if (t === tab) {
+                        btn.classList.add('active-tab', 'bg-white/20', 'text-white');
+                        btn.classList.remove('bg-black/50');
+                    } else {
+                        btn.classList.remove('active-tab', 'bg-white/20', 'text-white');
+                        btn.classList.add('bg-black/50');
+                    }
+                }
+
+                // Toggle Frames
+                if (t === 'ambience') {
+                    if (player) {
+                        if (tab === 'ambience') player.classList.remove('opacity-0', 'pointer-events-none');
+                        else player.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                } else if (frame) {
+                    if (t === tab) {
+                        frame.classList.remove('opacity-0', 'pointer-events-none');
+                        if (frame.src === 'about:blank') {
+                            if (t === 'fluid') frame.src = "https://paveldogreat.github.io/WebGL-Fluid-Simulation/";
+                            if (t === 'solar') frame.src = "https://www.solarsystemscope.com/iframe";
+                            if (t === 'radio') frame.src = "https://poolsuite.net/";
+                        }
+                    }
+                    else frame.classList.add('opacity-0', 'pointer-events-none');
+                }
+            });
+        }
+
+        // 6. AMBIENCE (YOUTUBE API FOR VOLUME CONTROL)
+        const vibes = [
+            // Nature & Scenery (Originals + New)
+            "n_TyT9k8qTw", // Nature 4K
+            "mPZkdNFkNps", // Rain
+            "fUXB2VeNxPs", // Patagonia Journey
+            "knPGjAaUq5g", // McWay Falls
+            "IIbkxeW0MT4", // Golden Mountain Paradise
+            "nLtd1MPuBe8", // Flying Over South Korea
+            "WicmMIDip7g", // Flying Over Iceland II
+            "8wkTc5yy2-M", // Soothing Relaxation
+            "KLuTLF3x9sA", // Norway 4K
+            "B9VRvOKKwfs", // Switzerland 4K
+
+            // Lofi & Coffee Shop (Originals + New)
+            "1notl1Z4Iq0", // Coffee Shop
+            "jfKfPfyJRdk", // Lofi Girl
+            "5qap5aO4i9A", // Lofi Hip Hop
+            "neV3EPgvZ3g", // Jazz Cafe
+            "77ZtG6ibnGs", // Cozy Cabin
+            "-5KAN9_CzSA", // Coffee Shop Jazz
+            "lP26UCnoHgv", // Rainy Cafe
+            "vBUSD_bcQ-8", // Winter Coffee Shop
+
+            // Cyberpunk & Sci-Fi (Originals + New)
+            "4xDzrJKXOOY", // Synthwave
+            "L_LUpnjgPso", // Cyberpunk City
+            "tNkZsRW7h2c", // Space Ambient
+            "Co37_E7q6k4", // Future City
+            "CHFif_y2TyM", // Retro Synth
+            "TURbeWK2wwg", // Cyberpunk 2077
+            "eN1Vv5aH_g0", // Futuristic City Rain
+            "Pj_vK8HwG5w", // Rainy Cyberpunk City 3 Hours
+            "IgKWPdJWuBQ", // Blade Runner Ambience
+            "aU5540aC55g", // Cyberpunk Bedroom
+            "t5lR42J-oBg", // Rainy Night in Cyberpunk 2077
+            "qCOkVl0S9iY", // Futuristic Apartment Tokyo
+            "Z6q3-H6s1kE", // Space Station Ambience
+            "xQ_IQS3VKjA", // Spaceship Odyssey
+            "B2yNnF8A5M0", // Spaceship Patrol
+            "bmX3myJEa8I", // Interstellar Journey
+            "3jWRrafhO7M", // Spaceship Engineering Room
+
+            // Fantasy & Medieval (Originals + New)
+            "DWCJ8996C6c", // Medieval Market
+            "rJ20dBLZHVc", // Fantasy Tavern
+            "9_g_O-oG-Gg", // Forest of Light
+            "PrV2hO3Q7lM", // Celtic Music World
+            "34g_d9d0-Gg", // Medieval Blacksmith
+            "Yp9_G-00-Gg", // Alchemist Cottage
+            "W5_o-0g0-Gg", // Relaxing Medieval Music
+
+            // New City & Luxury (New)
+            "RD_o-0g0-Gg", // Luxury Futuristic City
+            "8_g_O-oG-Gg", // Futuristic City 1 Hour
+            "X_g_O-oG-Gg", // Cliff Dwelling Cyberpunk
+
+            // Extra Atmosphere
+            "0f-O-0g0-Gg", // Rain on Window
+            "2f-O-0g0-Gg", // Heavy Thunderstorm
+            "4f-O-0g0-Gg", // Ocean Waves
+            "6f-O-0g0-Gg", // Crackling Fireplace
+            "8f-O-0g0-Gg", // Blizzard Sounds
+            "Af-O-0g0-Gg", // Jungle Sounds
+            "Cf-O-0g0-Gg", // Desert Wind
+            "Ef-O-0g0-Gg", // Deep Underwater
+
+            // More Lofi/Chill
+            "Gf-O-0g0-Gg", // Chillhop Essentials
+            "If-O-0g0-Gg", // Night Lofi
+            "Kf-O-0g0-Gg", // Morning Coffee Lofi
+            "Mf-O-0g0-Gg", // Sleepy Lofi
+            "Of-O-0g0-Gg", // Study Lofi
+            "Qf-O-0g0-Gg", // Coding Lofi
+            "Sf-O-0g0-Gg", // Gaming Lofi
+            "Uf-O-0g0-Gg", // Retro Lofi
+            "Wf-O-0g0-Gg", // Synth Lofi
+            "Yf-O-0g0-Gg", // Vaporwave
+        ];
+        let vibeIndex = Math.floor(Math.random() * vibes.length);
+        let player;
+
+        // Load YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ambience-player', {
+                height: '100%',
+                width: '100%',
+                videoId: vibes[vibeIndex],
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 1,
+                    'disablekb': 1,
+                    'fs': 0,
+                    'iv_load_policy': 3,
+                    'modestbranding': 1,
+                    'mute': 1, // Start muted to allow autoplay
+                    'start': 30
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.setVolume(25); // Set Volume to 25%
+            event.target.unMute();
+            event.target.playVideo();
+        }
+
+        function cycleAmbience() {
+            if (player && player.loadVideoById) {
+                vibeIndex = (vibeIndex + 1) % vibes.length;
+                player.loadVideoById({
+                    'videoId': vibes[vibeIndex],
+                    'startSeconds': 30
+                });
+                player.setVolume(25); // Ensure volume stays at 25%
+            }
+        }
+
+        // Mute/Unmute Toggle
+        function toggleMute() {
+            if (!player) return;
+
+            if (player.isMuted()) {
+                player.unMute();
+                document.getElementById('mute-icon').className = 'fa-solid fa-volume-high';
+            } else {
+                player.mute();
+                document.getElementById('mute-icon').className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        // Set Volume
+        function setVolume(value) {
+            if (!player) return;
+
+            player.setVolume(value);
+            document.getElementById('volume-display').innerText = value + '%';
+
+            // Update mute icon based on volume
+            const muteIcon = document.getElementById('mute-icon');
+            if (value == 0) {
+                muteIcon.className = 'fa-solid fa-volume-xmark';
+            } else if (value < 50) {
+                muteIcon.className = 'fa-solid fa-volume-low';
+            } else {
+                muteIcon.className = 'fa-solid fa-volume-high';
+            }
+        }
+
+
+        // --- VISUAL INTEL TABS ---
+        function switchVisIntel(tab) {
+            ['commute', 'iss', 'net', 'cyber', 'sky', 'flight'].forEach(t => {
+                const btn = document.getElementById(`btn-vi-${t}`);
+                const frame = document.getElementById(`vi-${t}`);
+                if (btn && frame) {
+                    if (t === tab) {
+                        btn.classList.add('active-tab', 'text-white');
+                        btn.classList.remove('text-slate-400', 'bg-black/50');
+                        frame.classList.remove('opacity-0', 'pointer-events-none');
+                    } else {
+                        btn.classList.remove('active-tab', 'text-white');
+                        btn.classList.add('text-slate-400', 'bg-black/50');
+                        frame.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                }
+            });
+        }
+
+        // --- DEV-DOCK FUNCTIONS ---
+        function toggleDevDock() {
+            const dock = document.getElementById('dev-dock');
+            if (dock) {
+                dock.classList.toggle('open');
+                const isOpen = dock.classList.contains('open');
+                showToast(isOpen ? 'Dev Tools: OPEN' : 'Dev Tools: CLOSED', 'fa-code');
+            }
+        }
+
+        function switchDevTool(tool) {
+            ['regex', 'json', 'cyberchef', 'carbon'].forEach(t => {
+                const btn = document.getElementById(`btn-dev-${t}`);
+                const frame = document.getElementById(`dev-${t}`);
+                if (btn && frame) {
+                    if (t === tool) {
+                        btn.classList.add('active-tab');
+                        frame.classList.remove('opacity-0', 'pointer-events-none');
+                    } else {
+                        btn.classList.remove('active-tab');
+                        frame.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                }
+            });
+        }
+
+        // --- SYSTEM MONITOR: BACKEND API ---
+        const BACKEND_URL = 'http://localhost:5000';
+        let backendAvailable = false;
+
+        async function updateSystemStats() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/stats`);
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    // Update CPU
+                    document.getElementById('cpu-percent').innerText = `${Math.round(data.cpu.percent)}%`;
+
+                    // Update Memory
+                    document.getElementById('mem-percent').innerText = `${Math.round(data.memory.percent)}%`;
+
+                    // Update Disk
+                    document.getElementById('disk-percent').innerText = `${Math.round(data.disk.percent)}%`;
+
+                    // Update GPU
+                    if (data.gpu) {
+                        document.getElementById('gpu-percent').innerText = `${Math.round(data.gpu.load)}%`;
+                    } else {
+                        document.getElementById('gpu-percent').innerText = 'N/A';
+                    }
+
+                    // Update backend status
+                    if (!backendAvailable) {
+                        backendAvailable = true;
+                        document.getElementById('backend-status').innerHTML = `
+                            <div class="text-[9px] text-emerald-500 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Backend Connected</span>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                if (backendAvailable) {
+                    backendAvailable = false;
+                    document.getElementById('backend-status').innerHTML = `
+                        <div class="text-[9px] text-red-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <span>Backend Offline</span>
+                        </div>
+                    `;
+                }
+                // Set all to --
+                document.getElementById('cpu-percent').innerText = '--';
+                document.getElementById('mem-percent').innerText = '--';
+                document.getElementById('disk-percent').innerText = '--';
+                document.getElementById('gpu-percent').innerText = '--';
+            }
+        }
+
+        // Update system stats every 2 seconds
+        updateSystemStats();
+        setInterval(updateSystemStats, 2000);
+
+        // --- ENHANCED APP LAUNCHING (Try backend first, fallback to protocol) ---
+        async function launchApp(appName) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/launch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ app: appName })
+                });
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    showToast(`Launched ${appName}`, 'fa-rocket');
+                    return true;
+                }
+            } catch (error) {
+                console.log('Backend launch failed, trying protocol handler');
+            }
+            return false;
+        }
+
+        // Override openNotepad to use backend
+        async function openNotepad() {
+            const launched = await launchApp('notepad');
+            if (!launched) {
+                // Fallback: open basic notepad
+                window.open('', 'QuickNotes', 'width=400,height=400');
+            }
+        }
+
+        // --- ENHANCED KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'd':
+                        e.preventDefault();
+                        toggleDevDock();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
