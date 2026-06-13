@@ -11,7 +11,9 @@ import platform
 import os
 
 app = Flask(__name__)
-CORS(app)  # Allow requests from local HTML file
+# Restrict CORS to local file:// origins so other browser tabs cannot hit /launch.
+# Browsers send "null" as the Origin header for file:// pages.
+CORS(app, origins=["null"])
 
 # Application Registry - Maps friendly names to executable paths
 APP_REGISTRY = {
@@ -55,7 +57,7 @@ def get_system_stats():
                     'memory_used': round(gpu.memoryUsed / 1024, 1),
                     'memory_total': round(gpu.memoryTotal / 1024, 1)
                 }
-        except:
+        except Exception:
             pass
         
         return jsonify({
@@ -82,33 +84,29 @@ def get_system_stats():
 
 @app.route('/launch', methods=['POST'])
 def launch_application():
-    """Launches a local application by name"""
+    """Launches a local application by name. Args are intentionally ignored:
+    accepting arbitrary args turns a registry lookup into RCE the moment the
+    registry includes a shell, scripting host, or any binary that takes a path."""
     try:
-        data = request.json
+        data = request.json or {}
         app_name = data.get('app', '').lower()
-        args = data.get('args', [])
-        
+
         if app_name not in APP_REGISTRY:
             return jsonify({
                 'status': 'error',
                 'message': f'Unknown application: {app_name}'
             }), 400
-        
+
         app_path = APP_REGISTRY[app_name]
-        
-        # Check if executable exists
+
         if not os.path.exists(app_path):
             return jsonify({
                 'status': 'error',
                 'message': f'Application not found at: {app_path}'
             }), 404
-        
-        # Launch the application
-        if args:
-            subprocess.Popen([app_path] + args)
-        else:
-            subprocess.Popen([app_path])
-        
+
+        subprocess.Popen([app_path])
+
         return jsonify({
             'status': 'ok',
             'message': f'Launched {app_name}',

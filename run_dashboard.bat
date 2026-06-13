@@ -8,7 +8,7 @@ REM Check if Python is available
 python --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python not found in PATH
-    echo Please install Python 3.14 or add it to PATH
+    echo Please install Python 3.10+ or add it to PATH
     pause
     exit /b 1
 )
